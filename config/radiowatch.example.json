@@ -1,0 +1,10 @@
+{
+  "base_dir": "/opt/radio",
+  "output_dir": "recordings",
+  "llm_models_url": "http://127.0.0.1:8000/v1/models",
+  "services": ["edacs-rec", "edacs-local", "edacs-telegram"],
+  "voice_lcns": [],
+  "recorder_config": "recorder.json",
+  "timezone": "America/Chicago",
+  "subtitle": "EDACS · Whisper · Telegram"
+}

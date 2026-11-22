@@ -1,0 +1,31 @@
+[Unit]
+Description=EDACS trunk recorder (dsd-fme control channel + channelized voice)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=radio
+Group=radio
+# the radio user needs access to the RTL-SDR USB devices (see docs/setup.md)
+WorkingDirectory=/opt/radio
+ExecStart=/opt/radio/venv/bin/python -u /opt/radio/radio/edacs_rec.py /opt/radio/recorder.json
+Restart=always
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=10
+
+# hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/radio
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,30 @@
+[Unit]
+Description=Radio calls -> Whisper -> LLM -> Telegram
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=radio
+Group=radio
+WorkingDirectory=/opt/radio
+ExecStart=/opt/radio/venv/bin/python -u /opt/radio/radio/edacs_telegram.py /opt/radio/transcriber.json
+Restart=always
+RestartSec=10
+Nice=5
+
+# hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/radio
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

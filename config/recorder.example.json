@@ -1,0 +1,44 @@
+{
+  "_comment": "edacs_rec.py config. Every frequency, serial and ID below is a PLACEHOLDER: replace it with your own site's values (RadioReference lists LCN plans for most EDACS sites).",
+  "output_dir": "recordings",
+  "labels_file": "labels.json",
+  "spool_dir": "spool",
+  "timezone": "America/Chicago",
+  "site_id": 1,
+  "system_id": 1,
+  "hangtime_s": 1.5,
+  "min_duration_s": 0.5,
+  "max_duration_s": 180,
+  "deemphasis_tau_s": 0.00075,
+  "lcns": {
+    "1": 856012500,
+    "2": 856262500,
+    "3": 856512500,
+    "4": 856762500,
+    "5": 857262500,
+    "6": 857512500
+  },
+  "control": {
+    "serial": "00000100",
+    "freq": 856012500,
+    "gain": 0,
+    "ppm": 0,
+    "dsd_args": ["-fh"]
+  },
+  "voice_sdrs": [
+    {
+      "serial": "00000101",
+      "center_hz": 856700000,
+      "gain": 0,
+      "ppm": 0,
+      "lcns": [2, 3, 4, 5, 6]
+    }
+  ],
+  "cc_tap": {
+    "_comment": "Optional. Decode the control channel from a voice SDR's slice instead of a dedicated dongle (its frequency must lie inside that slice). With primary=false it only runs alongside the dedicated CC dongle for comparison; delete this block to use the dedicated dongle only.",
+    "serial": "00000101",
+    "port": 7350,
+    "primary": false
+  },
+  "bias_tee": false
+}

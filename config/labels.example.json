@@ -1,0 +1,14 @@
+{
+  "_comment": "Talkgroup and radio-ID names used in file names, tags and messages. Keys are decimal EDACS group / LID numbers as strings.",
+  "groups": {
+    "1001": "County Sheriff Dispatch",
+    "1002": "County Sheriff Tac",
+    "1101": "City Police Dispatch",
+    "1201": "Fire Dispatch",
+    "1202": "Fire Tac 1",
+    "1301": "Highway Department"
+  },
+  "users": {
+    "1234": "Dispatch Console 1"
+  }
+}

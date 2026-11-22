@@ -1,0 +1,27 @@
+# secrets and local config (copy the *.example.* files instead)
+*.env
+!*.env.example
+/recorder.json
+/conventional.json
+/transcriber.json
+/labels.json
+/radiowatch.json
+# runtime data
+recordings/
+spool/
+transcripts/
+p25wav/
+incident_audio/
+incidents_state.json*
+whisper_bench.json
+*.mp3
+*.wav
+*.pcm
+*.s16
+*.log
+# python
+__pycache__/
+*.pyc
+venv/
+.venv*/
+*.bak*

@@ -1,0 +1,17 @@
+{
+  "_comment": "edacs_telegram.py config. Any key from CFG in edacs_telegram.py can be set here.",
+  "timezone": "America/Chicago",
+  "area": "Springfield and Example County",
+  "initial_prompt": "Police, fire and EMS radio dispatch in Springfield and Example County. Main Street, Interstate 99, Highway 12, copy, en route, 10-4.",
+  "initial_prompt_local": null,
+  "model": "small.en",
+  "workers": 2,
+  "cpu_threads": 3,
+  "mode": "incidents",
+  "incident_min_severity_post": 2,
+  "incident_audio": true,
+  "ignore_talkgroups": [],
+  "llm_url": "http://127.0.0.1:8000/v1/chat/completions",
+  "llm_model": "your-model-name",
+  "llm_disable_thinking": false
+}

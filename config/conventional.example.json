@@ -1,0 +1,42 @@
+{
+  "_comment": "local_rec.py config for conventional (non-trunked) channels. All values are PLACEHOLDERS. Each SDR covers about +/-1.1 MHz around center_hz. The 'talkgroup' of a channel is its frequency in kHz.",
+  "output_dir": "recordings",
+  "spool_dir": "spool",
+  "wav_dir": "p25wav",
+  "album": "conventional",
+  "site_id": 0,
+  "system_id": 0,
+  "timezone": "America/Chicago",
+  "bias_tee": false,
+  "hangtime_s": 1.2,
+  "min_duration_s": 0.8,
+  "min_duration_p25_s": 0.5,
+  "squelch_open_db": 10,
+  "squelch_hold_db": 6,
+  "first_lcn": 100,
+  "first_tap_port": 7360,
+  "stats_s": 300,
+  "sdrs": [
+    {
+      "_comment": "One whole dongle given to dsd-fme on a single P25 channel (best P25 decode).",
+      "serial": "00000102",
+      "gain": 16,
+      "port": 1250,
+      "direct": {"name": "County Sheriff Dispatch (P25)", "freq": 155010000}
+    },
+    {
+      "_comment": "One dongle channelized into many channels. mode: fm | p25 | mixed. 'tone' (CTCSS Hz) is optional and only used by fm/mixed.",
+      "serial": "00000103",
+      "center_hz": 154500000,
+      "gain": 15.7,
+      "port": 1251,
+      "filter_hz": 7000,
+      "channels": [
+        {"name": "County Fire Dispatch", "freq": 154190000, "mode": "fm"},
+        {"name": "County Fire Tac", "freq": 154250000, "mode": "fm", "tone": 156.7},
+        {"name": "Sheriff Tac (P25)", "freq": 154800000, "mode": "p25"},
+        {"name": "EMS Dispatch", "freq": 155340000, "mode": "mixed"}
+      ]
+    }
+  ]
+}
