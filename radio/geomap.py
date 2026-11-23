@@ -77,7 +77,7 @@ def configure(**kw):
 
 # ---------------------------------------------------------------- http helpers
 class _V4HTTPS(http.client.HTTPSConnection):
-    """lin-radio has no IPv6 route but these hosts publish AAAA records: IPv4 only."""
+    """For hosts with no IPv6 route: these services publish AAAA records, so use IPv4 only."""
     def connect(self):
         addr = socket.getaddrinfo(self.host, self.port, socket.AF_INET, socket.SOCK_STREAM)[0][4]
         self.sock = self._context.wrap_socket(socket.create_connection(addr, self.timeout),
