@@ -117,6 +117,19 @@ sudo -u radio install -m 600 config/telegram.env.example telegram.env
 - `llm_url` / `llm_model`: your OpenAI-compatible server. Set `llm_disable_thinking`
   for Qwen3-style models that otherwise emit a long `<think>` block.
 - `mode`: `incidents` (default), `digest` or `per_call`. Without an LLM, use `per_call`.
+- Incident maps (optional; needs `pillow`): set `incident_maps: true`, `home_latlon`
+  and `geo_region` (`[south, west, north, east]` around your coverage area, so a
+  misheard street name can't match a street in another state), plus `geo_state`.
+  Incidents within `incident_map_radius_mi` of home get a reply with two maps:
+  a close-up, and one with home, the incident and the distance and bearing between them.
+  Farther ones only get the distance in the caption. `geo_interstates` / `geo_us_routes`
+  list the route numbers people say as "Highway N", since Nominatim reads a bare
+  "Highway 50" as house number 50. Pins marked "≈" are approximate (street only, or an
+  estimated intersection). Lookups use the free US Census geocoder and OpenStreetMap's
+  Nominatim and tile servers: results are cached in `geocache.json` and `tiles/`, and
+  Nominatim is limited to one request a second; keep the volume within their
+  [usage policies](https://operations.osmfoundation.org/policies/). If the host has
+  IPv6 DNS but no IPv6 route, set `geo_force_ipv4: true`.
 
 **telegram.env**: create a bot with @BotFather, add it to a private chat or group,
 send a message there, and read the chat id from

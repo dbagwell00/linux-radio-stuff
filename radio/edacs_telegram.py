@@ -75,6 +75,19 @@ CFG = {
     "incident_audio_dir": "incident_audio",
     "incident_audio_max_s": 1200,   # keep only the most recent 20 min of calls in the clip
     "incident_audio_gap_s": 0.7,    # silence between calls
+    # incident maps (geomap.py): a reply album with a close-up map and one showing the incident
+    # relative to home_latlon; the caption's 📍 line gets "N mi DIR of home". Uses the free
+    # US Census geocoder and OpenStreetMap Nominatim + tiles: keep the volume low.
+    "incident_maps": False,
+    "home_latlon": None,            # [lat, lon]; needed for the second map and the radius
+    "incident_map_radius_mi": 10,   # maps only within this distance of home (0 = everywhere)
+    "geo_region": None,             # [south, west, north, east] your coverage area
+    "geo_state": "",                # e.g. "Nevada"
+    "geo_interstates": [],          # numbers a bare "Highway N" means I-N
+    "geo_us_routes": [],            # ... means US-N (any other number: SR N)
+    "geo_force_ipv4": False,
+    "geocode_cache": "geocache.json",
+    "map_tile_dir": "tiles",
     "digest_minutes": 10,
     "digest_grace_s": 30,           # wait for late transcripts before closing a window
     "talkgroups": [],               # empty = all; else only these TGs
@@ -256,6 +269,28 @@ class Telegram:
     def edit_caption(self, message_id, caption):
         return self._call("editMessageCaption",
                           {"message_id": message_id, "caption": caption}) is not None
+
+    # ---- photos (incident maps): an album replying to the incident message
+    def send_photos(self, photos, reply_to=None, silent=True):
+        """photos = [(png bytes, caption or "")]; returns the album's message ids or None."""
+        media, files = [], {}
+        for n, (data, cap) in enumerate(photos):
+            m = {"type": "photo", "media": f"attach://p{n}"}
+            if cap:
+                m.update(caption=cap, parse_mode="HTML")
+            media.append(m)
+            files[f"p{n}"] = (f"map{n}.png", data, "image/png")
+        f = {"media": json.dumps(media)}
+        if reply_to:
+            f["reply_parameters"] = json.dumps({"message_id": reply_to,
+                                                "allow_sending_without_reply": True})
+        r = self._call("sendMediaGroup", f, silent, files=files)
+        return [m["message_id"] for m in r["result"]] if r and "result" in r else None
+
+    def edit_photo(self, message_id, data, caption=""):
+        m = {"type": "photo", "media": "attach://p", "caption": caption, "parse_mode": "HTML"}
+        return self._call("editMessageMedia", {"message_id": message_id, "media": json.dumps(m)},
+                          files={"p": ("map.png", data, "image/png")}) is not None
 
     @staticmethod
     def _multipart(params, files):

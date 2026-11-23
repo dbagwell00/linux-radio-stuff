@@ -22,6 +22,8 @@ if len(sys.argv) > 2:
     cfg.update(json.load(open(sys.argv[2])))
 cfg["incident_state_file"] = os.path.join(tempfile.mkdtemp(prefix="incident_dryrun_"), "state.json")
 cfg["incident_audio"] = False
+MAP_DIR = os.path.join(os.path.dirname(cfg["incident_state_file"]), "maps")   # incident maps
+os.makedirs(MAP_DIR, exist_ok=True)
 env = et.load_env(cfg["env_file"])
 tz = ZoneInfo(cfg["timezone"])
 
@@ -43,6 +45,20 @@ class FakeTG:
 
     def edit(self, mid, text):
         self._p(f"EDIT #{mid}", text)
+        return True
+
+    def send_photos(self, photos, reply_to=None, silent=True):
+        ids = []
+        for data, cap in photos:
+            FakeTG.n += 1
+            open(os.path.join(MAP_DIR, f"{FakeTG.n}.png"), "wb").write(data)
+            ids.append(FakeTG.n)
+        print(f"--- MAPS {ids} (reply to #{reply_to}) -> {MAP_DIR}/ ---\n")
+        return ids
+
+    def edit_photo(self, mid, data, caption=""):
+        open(os.path.join(MAP_DIR, f"{mid}.png"), "wb").write(data)
+        print(f"--- EDIT MAP #{mid} ---\n")
         return True
 
 

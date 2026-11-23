@@ -3,6 +3,8 @@ numpy>=1.26
 scipy>=1.11
 # transcriber
 faster-whisper>=1.0
+# incident maps (optional, incident_maps: true)
+pillow>=10.1
 # radiowatch TUI (optional)
 textual>=0.80
 rich>=13

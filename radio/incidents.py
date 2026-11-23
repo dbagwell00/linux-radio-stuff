@@ -19,6 +19,7 @@ from datetime import datetime
 
 import numpy as np
 
+import geomap
 from audio_util import level_speech
 
 log = logging.getLogger("edacs_telegram.incidents")
@@ -94,6 +95,10 @@ class Incident:
         self.audio_n = 0       # clips included in the posted audio
         self.closed = False
         self.posted_text = ""
+        self.geo = None        # geomap.Geo dict for `location`, or None
+        self.geo_for = ""      # the location string `geo` was looked up for
+        self.map_ids = None    # [close-up, vs-home] photo message ids
+        self.map_key = None    # "lat,lon" the posted maps show
 
     def to_json(self):
         return {k: v for k, v in self.__dict__.items()}
@@ -117,6 +122,11 @@ class IncidentTracker:
         self.pending = []                               # transcripts not yet threaded
         self.lock = threading.Lock()
         self.last_roundup = time.time()
+        self.home = cfg.get("home_latlon")
+        geomap.configure(cache_file=cfg.get("geocode_cache"), tile_dir=cfg.get("map_tile_dir"),
+                         region=cfg.get("geo_region"), state=cfg.get("geo_state"),
+                         interstates=cfg.get("geo_interstates"), us_routes=cfg.get("geo_us_routes"),
+                         force_ipv4=cfg.get("geo_force_ipv4"))
         self._load()
 
     # ---- persistence
@@ -251,7 +261,7 @@ class IncidentTracker:
         state = "✅ resolved" if inc.closed else "🟢 active"
         sev = {1: "", 2: "", 3: "‼️ "}[inc.severity]
         txt = (f"{sev}{EMOJI.get(inc.type, '📻')} <b>{html.escape(inc.title or inc.type)}</b>\n"
-               + (f"📍 {html.escape(inc.location)}\n" if inc.location else "")
+               + (f"📍 {html.escape(inc.location)}{self._rel(inc)}\n" if inc.location else "")
                + f"{html.escape(inc.summary)}\n"
                f"<i>{chans} · {span} · {inc.count} tx" + (f" · units {u}" if u else "")
                + f" · {state}</i>")
@@ -302,9 +312,62 @@ class IncidentTracker:
         performer = " / ".join(l or f"TG {t}" for t, l in inc.tgs.items()) or "radio"
         return title, performer
 
+    def _rel(self, inc):
+        if not (inc.geo and self.home):
+            return ""
+        return f" <i>({'≈ ' if inc.geo['approx'] else ''}{geomap.relation(inc.geo, self.home)})</i>"
+
+    def _geocode(self, inc):
+        if not self.cfg.get("incident_maps") or inc.location == inc.geo_for:
+            return
+        inc.geo_for = inc.location
+        try:
+            inc.geo = geomap.geocode(inc.location) if inc.location else None
+        except Exception:
+            log.exception("geocode for %s failed", inc.id)
+            inc.geo = None
+
+    def _publish_maps(self, inc):
+        """Album of 2 maps replying to the incident message; edited in place if the pin moves."""
+        g = inc.geo
+        if not (self.cfg.get("incident_maps") and g and inc.msg_id is not None):
+            return
+        key = f"{g['lat']:.5f},{g['lon']:.5f}"
+        if key == inc.map_key:
+            return
+        radius = self.cfg.get("incident_map_radius_mi")
+        if radius and self.home and not inc.map_ids and \
+                geomap.distance_mi(self.home[0], self.home[1], g["lat"], g["lon"]) > radius:
+            return                                    # far away: distance in caption only
+        try:
+            close = geomap.render_close(g, inc.location)
+            rel = geomap.render_home(g, self.home, inc.location) if self.home else None
+        except Exception:
+            log.exception("map render for %s failed", inc.id)
+            return
+        cap = f"🗺 {html.escape(inc.title or inc.type)} ({inc.id})"
+        if inc.map_ids:
+            ok = self.tg.edit_photo(inc.map_ids[0], close, cap)
+            if rel and len(inc.map_ids) > 1:
+                ok &= self.tg.edit_photo(inc.map_ids[1], rel)
+        else:
+            ids = self.tg.send_photos([(close, cap)] + ([(rel, "")] if rel else []),
+                                      reply_to=inc.msg_id, silent=True)
+            ok = bool(ids)
+            if ids:
+                inc.map_ids = ids
+        if ok:
+            inc.map_key = key
+            log.info("maps for %s: %s (%s)", inc.id, inc.location, g.get("how"))
+
     def _publish(self, inc):
         if inc.severity < self.cfg["incident_min_severity_post"]:
             return                                    # minor: hourly round-up only
+        self._geocode(inc)
+        self._publish_msg(inc)
+        self._publish_maps(inc)
+
+    def _publish_msg(self, inc):
         audio = self.cfg.get("incident_audio") and inc.msg_kind != "text" and \
             (inc.msg_id is None or inc.msg_kind == "audio")
         txt = self._render(inc, limit=1000 if audio else 4096)
